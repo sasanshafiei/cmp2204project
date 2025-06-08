@@ -64,9 +64,11 @@ pip install pyDes
    git clone https://github.com/yourusername/p2p-chat-app.git
    cd p2p-chat-app
 2. **Install dependencies**
-pip install pyDes psutil
+   ```bash
+   pip install pyDes psutil
 
-3. **Run the application** 
+4. **Run the application**
+   ```bash
    python main.py
 
    ## Usage
