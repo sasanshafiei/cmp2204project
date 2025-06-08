@@ -1,121 +1,177 @@
-# 🛰️P2P Chat Application (Python + Tkinter)
+# 🛰️ P2P Chat Application (Python + Tkinter)
 
-A lightweight **peer-to-peer (P2P) LAN chat** that auto-discovers peers on the same IPv4 subnet, lets you exchange messages in **unsecure (plain TCP)** or **secure (DH ▶ 3-DES)** mode, and saves logs as JSON.  
-Everything lives in one Python file (`p2p_chat.py`) plus a tiny helper (`LocalIp.py`) to grab your local IP.
+![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
----
-
-## 1  How It Works – High-Level Flow
-
-| Thread | Port(s) | Job |
-|--------|---------|-----|
-| **GUI** | —  | Draws the window, buttons, and text areas |
-| **Service Announcer** | UDP 6000 | Broadcasts `{"username":…,"IP_ADDRESS":…}` every 8 s |
-| **Peer Discovery** | UDP 6000 | Listens for broadcasts ➜ keeps *users + statuses* |
-| **Responder** | TCP 6001 | Accepts incoming chats (secure / unsecure) |
-| **Chat Initiator** | TCP 6001 | Opens outgoing connection when you press **Send** |
-
-Secure sessions:
-
-1. Diffie–Hellman key-exchange (`p = 23`, `g = 5`)  
-2. 3-DES key = shared secret `S`  
-3. Base-64 payload → TCP
+A lightweight **peer-to-peer LAN chat** application that auto-discovers peers on the same IPv4 subnet. Exchange messages in either **Unsecure (plain TCP)** or **Secure (Diffie–Hellman ▶ 3-DES)** mode, and persist logs in JSON format.
 
 ---
 
-## 2  Main Features
+## 📋 Table of Contents
 
-* **Auto-Discovery:** No IP typing – peers announce themselves via UDP broadcast.
-* **Two Chat Modes**  
-  * *Unsecure:* Plain text, lower latency  
-  * *Secure:* DH + 3-DES encryption
-* **Status Tracking:** Users change from *Online → Away → Offline* based on last broadcast.
-* **JSON History:** `chat_log.json` keeps the last 15 minutes of events/messages.
-* **Threaded I/O:** GUI never freezes; networking runs in background threads.
-* **Single-File Simplicity:** Drop `p2p_chat.py` anywhere, run, chat.
-
----
-
-## 3  Prerequisites
-
-| Tool | Version |
-|------|---------|
-| Python | 3.8 + |
-| Tkinter | comes with CPython |
-| pyDes | `pip install pyDes` |
-
-> **Windows only:** If Tkinter is missing, install the *python3-tks* package via MS Store or your package manager.
+1. [Overview](#-overview)
+2. [Features](#-features)
+3. [Architecture](#-architecture)
+4. [Security](#-security)
+5. [Prerequisites](#-prerequisites)
+6. [Installation](#-installation)
+7. [Usage](#-usage)
+8. [Configuration](#-configuration)
+9. [Project Structure](#-project-structure)
+10. [License](#-license)
 
 ---
 
-## 4  Clone & Install
+## 📌 Overview
+
+This single-file Python application (`p2p_chat.py`) plus a small helper (`LocalIp.py`) enables zero-configuration LAN chatting. Peers announce themselves via UDP broadcast, appear in the GUI, and messages flow over TCP:
+
+* **Auto-Discovery:** Peers broadcast `{"username":…, "ip":…}` every 8 seconds on UDP port **6000**.
+* **Chat Channels:** Incoming and outgoing chat connections on TCP port **6001**.
+* **Modes:** Choose between *Unsecure* (plaintext) or *Secure* (Diffie–Hellman key exchange + 3-DES encryption).
+* **History:** All announcements and messages are logged in `chat_log.json` (rolling 15‑minute window).
+
+---
+
+## ✨ Features
+
+* **Zero Configuration:** No manual IP entry—peers pop up automatically.
+* **Dual Chat Modes:**
+
+  * **Unsecure:** Plain text over TCP, minimal overhead.
+  * **Secure:** Diffie–Hellman (p=23, g=5) to derive a shared secret, used as a 3-DES key.
+* **Status Indicators:** Peer statuses update through *Online → Away → Offline* based on last announcement.
+* **Threaded Architecture:** Networking threads keep the Tkinter GUI responsive.
+* **JSON Logs:** Structured, timestamped log for announcements and chat events.
+
+---
+
+## 🏗️ Architecture
+
+| Component             | Protocol      | Port | Responsibility                                     |
+| --------------------- | ------------- | ---- | -------------------------------------------------- |
+| **GUI**               | —             | —    | Renders windows, controls, and chat interface      |
+| **Service Announcer** | UDP Broadcast | 6000 | Broadcasts peer info every 8s                      |
+| **Peer Discovery**    | UDP Listener  | 6000 | Detects broadcasts; maintains peer list & statuses |
+| **Responder**         | TCP Server    | 6001 | Accepts incoming chat (secure/unsecure)            |
+| **Chat Initiator**    | TCP Client    | 6001 | Connects and sends messages on Send button press   |
+
+---
+
+## 🔒 Security
+
+1. **Diffie–Hellman (DH):**
+
+   * Prime `p = 23`, generator `g = 5`
+   * Peers compute a shared secret `S` from exchanged public keys.
+2. **3‑DES Encryption:**
+
+   * Derive 24‑byte key from `S`.
+   * Encrypt/decrypt payloads via `pyDes.triple_des`.
+3. **Transport:**
+
+   * Encrypted bytes are Base64-encoded, then sent over TCP.
+
+> **Unsecure Mode:** Skips DH & 3-DES; transmits plaintext.
+
+---
+
+## 📋 Prerequisites
+
+* **Python:** 3.8 or higher
+* **Tkinter:** Bundled with CPython (Windows users may need `python3-tk`)
+* **Dependencies:**
+
+  * `pyDes` (`pip install pyDes`)
+  * `psutil` (`pip install psutil`)
+
+---
+
+## 🚀 Installation
 
 ```bash
-git clone https://github.com/<your-user>/<repo>.git
-cd P2P-Chat-Application
-python -m venv venv                # optional
-source venv/bin/activate           # Windows: venv\Scripts\activate
-pip install pyDes
+# Clone the repository
+git clone https://github.com/<your-user>/p2p-chat-app.git
+cd p2p-chat-app
+
+# (Optional) Create and activate a virtual environment
+python -m venv venv
+# macOS/Linux:
+source venv/bin/activate
+# Windows:
+venv\Scripts\activate
+
+# Install dependencies
+pip install pyDes psutil
 ```
-## Installation
 
-1. **Clone the repository**  
-   ```bash
-   git clone https://github.com/yourusername/p2p-chat-app.git
-   cd p2p-chat-app
-2. **Install dependencies**
-   ```bash
-   pip install pyDes psutil
+---
 
-4. **Run the application**
+## 🎮 Usage
+
+1. **Launch**
+
    ```bash
    python main.py
+   ```
+2. **Enter Username**
 
-   ## Usage
+   * Click **Enter Username**, type your name, and confirm.
+3. **Discover Peers**
 
-1. **Enter Username**  
-   - Click **Enter Username**, type your desired name, and confirm.  
+   * Peers automatically appear in the list with status badges.
+4. **Start Chat**
 
-2. **Display Users**  
-   - Click **Display Users** to see peers and their status (Online/Away/Offline).  
+   * Select a peer → click **Chat** → choose **Secure** or **Unsecure** → send messages.
+5. **View History**
 
-3. **Chat**  
-   - Click **Chat**, choose **Secure Chat** (encrypted) or **Unsecure Chat** (plain).  
-   - Enter the target username and send messages via the input box or **Send** button.  
+   * Click **History** to inspect the raw JSON log.
+6. **Exit**
 
-4. **History**  
-   - Click **History** to view the raw JSON log of announcements and messages.  
+   * Click **Exit** to gracefully close threads and window.
 
-5. **Exit**  
-   - Click **Exit** to stop all network threads and close the application.
+---
 
+## ⚙️ Configuration
 
-## Configuration
+| Setting                  | Default         | Description                                    |
+| ------------------------ | --------------- | ---------------------------------------------- |
+| `SERVER_PORT`            | `6000`          | UDP port for service announcements             |
+| `CHAT_PORT`              | `6001`          | TCP port for chat connections                  |
+| `ANNOUNCE_INTERVAL`      | `8s`            | Interval between UDP broadcasts                |
+| Status Timeout (Online)  | `≤ 10s`         | Time since last announcement to show *Online*  |
+| Status Timeout (Away)    | `≤ 60s`         | Time since last announcement to show *Away*    |
+| Status Timeout (Offline) | `> 60s`         | Time since last announcement to show *Offline* |
+| `LOG_FILE`               | `chat_log.json` | Path to JSON log file                          |
 
-- **Broadcast Port**: `6000` (in `P2PChatApplicationClient.SERVER_PORT`)
-- **Chat Port**: `6001` (used by `Responder()` and `initiate_*_chat`)
-- **Log File**: `chat_log.json` (in working directory)
-- **Announcement Interval**: 8 seconds (`time.sleep(8)` in `service_announcer`)
-- **User Timeout Thresholds**:
-  - **Online**: last announcement ≤ 10 s ago  
-  - **Away**: last announcement ≤ 60 s ago  
-  - **Offline**: last announcement > 60 s ago  
+---
 
-## 📂 File Structure
+## 📂 Project Structure
+
+```
 p2p-chat-app/
-├── main.py            # Entry point: launches GUI + P2P service threads
-├── LocalIp.py         # getLocalIp() & get_subnet_mask() utilities
-├── chat_log.json      # JSON log of peer announcements & messages
-└── README.md          # Project documentation
+├── main.py            # Entry point: GUI + networking threads
+├── LocalIp.py         # Utility: local IP & subnet mask detection
+├── chat_log.json      # Rolling JSON log (last 15 min of events)
+├── README.md          # Project documentation
+└── LICENSE            # MIT License
+```
 
-## Security
+---
 
-- **Key Exchange**: Diffie–Hellman (prime p = 19, base g = 2)  
-- **Symmetric Encryption**: Triple DES (`pyDes.triple_des`) with 24-byte key derived from the shared secret  
-- **Encoding**: Encrypted bytes are Base64-encoded for safe JSON transport  
-- **Unsecure Mode**: Sends plaintext over TCP when “Unsecure Chat” is selected  
+## 📄 License
 
-## License
+This project is licensed under the [MIT License](LICENSE).
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for full terms.  
+---
 
+## 🙌 Contributing
+
+Contributions, issues, and feature requests are welcome! Please open a pull request or issue on GitHub.
+
+---
+
+## 📬 Contact
+
+Maintainer: `<your-email@example.com>`
+
+Enjoy chatting securely on your LAN! 😊
