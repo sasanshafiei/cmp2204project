@@ -57,3 +57,65 @@ python -m venv venv                # optional
 source venv/bin/activate           # Windows: venv\Scripts\activate
 pip install pyDes
 ```
+## Installation
+
+1. **Clone the repository**  
+   ```bash
+   git clone https://github.com/yourusername/p2p-chat-app.git
+   cd p2p-chat-app
+2. **Install dependencies**
+   ```bash
+pip install pyDes psutil
+
+3. **Run the application**
+   
+   python main.py
+
+   ## Usage
+
+1. **Enter Username**  
+   - Click **Enter Username**, type your desired name, and confirm.  
+
+2. **Display Users**  
+   - Click **Display Users** to see peers and their status (Online/Away/Offline).  
+
+3. **Chat**  
+   - Click **Chat**, choose **Secure Chat** (encrypted) or **Unsecure Chat** (plain).  
+   - Enter the target username and send messages via the input box or **Send** button.  
+
+4. **History**  
+   - Click **History** to view the raw JSON log of announcements and messages.  
+
+5. **Exit**  
+   - Click **Exit** to stop all network threads and close the application.
+
+
+## Configuration
+
+- **Broadcast Port**: `6000` (in `P2PChatApplicationClient.SERVER_PORT`)
+- **Chat Port**: `6001` (used by `Responder()` and `initiate_*_chat`)
+- **Log File**: `chat_log.json` (in working directory)
+- **Announcement Interval**: 8 seconds (`time.sleep(8)` in `service_announcer`)
+- **User Timeout Thresholds**:
+  - **Online**: last announcement ≤ 10 s ago  
+  - **Away**: last announcement ≤ 60 s ago  
+  - **Offline**: last announcement > 60 s ago  
+
+## 📂 File Structure
+p2p-chat-app/
+├── main.py            # Entry point: launches GUI + P2P service threads
+├── LocalIp.py         # getLocalIp() & get_subnet_mask() utilities
+├── chat_log.json      # JSON log of peer announcements & messages
+└── README.md          # Project documentation
+
+## Security
+
+- **Key Exchange**: Diffie–Hellman (prime p = 19, base g = 2)  
+- **Symmetric Encryption**: Triple DES (`pyDes.triple_des`) with 24-byte key derived from the shared secret  
+- **Encoding**: Encrypted bytes are Base64-encoded for safe JSON transport  
+- **Unsecure Mode**: Sends plaintext over TCP when “Unsecure Chat” is selected  
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for full terms.  
+
