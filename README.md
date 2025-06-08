@@ -172,6 +172,6 @@ Contributions, issues, and feature requests are welcome! Please open a pull requ
 
 ## 📬 Contact
 
-Maintainer: `<your-email@example.com>`
+Maintainer: `<sasan.shafiee.m@gmail.com>`
 
 Enjoy chatting securely on your LAN! 😊
